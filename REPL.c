@@ -35,6 +35,16 @@ long eval_op(long x, char* op, long y) {
   if (!strcmp(op, "-")) { return x - y; }
   if (!strcmp(op, "*")) { return x * y; }
   if (!strcmp(op, "/")) { return x / y; }
+  if (!strcmp(op, "%")) { return x % y; }
+  if (!strcmp(op, "^")) {
+    long product = 1;
+    for (int i = 0; i < y; i++) {
+      product *= x;
+      }
+     return product;
+   }
+  if (!strcmp(op, "min")) { return x < y ? x : y; }
+  if (!strcmp(op, "max")) { return x > y ? x : y; }
   return 0;
 }
 
@@ -45,6 +55,10 @@ long eval (mpc_ast_t* t) {
   }
   // operator is always the secound child
   char* op = t->children[1]->contents;
+  //printf("%d\n",t->children_num); help me find the number of children to filter with
+  if (!strcmp(op, "-") && t->children_num == 4)
+    { return -1 * eval(t->children[2]); }
+
   // evaluate expr arg
   long x = eval(t->children[2]);
   // iterate the remaining children and combine
@@ -56,6 +70,26 @@ long eval (mpc_ast_t* t) {
   return x;
 }
 
+long numberOfNodes(mpc_ast_t* t) {
+  if (t->children_num == 0) { return 1; }
+  if (t->children_num >= 1) {
+    int total = 1; // counts the node were looking at
+    for (int i = 0; i < t->children_num; i++) {
+      total = total + numberOfNodes(t->children[i]);
+    }
+    return total;
+  }
+
+  long numberOfBranches(mpc_ast_t* t){
+    return numberOfNodes(t) - 1;
+  }
+
+  long numberOfChildren(mpc_ast_t* t) {
+    return t->children_num;
+  }
+
+  return 0;
+}
 
 int main(int argc, char** argv){
   // create parsers
@@ -67,8 +101,8 @@ int main(int argc, char** argv){
   //define them with the following language
   mpca_lang(MPCA_LANG_DEFAULT,
     "                                                     \
-      number   : /-?[0-9]+(\\.[0-9]*)?/;                  \
-      operator : '+' | '-' | '*' | '/' | '%';             \
+      number   : /-?[0-9]+/;                              \
+      operator : '+' | '-' | '*' | '/' | '%' | '^' | \"min\" | \"max\" ; \
       expr     : <number> | '(' <operator> <expr>+ ')' ;  \
       lispish    : /^/ <operator> <expr>+ /$/ ;           \
     ",
@@ -93,6 +127,8 @@ int main(int argc, char** argv){
     mpc_result_t r;
     if (mpc_parse("<stdin>", input, Lispish, &r)) {
         /* On success print and delete the AST */
+        //mpc_ast_print(r.output);
+        // printf("%d\n", r)
         long result = eval(r.output);
         printf("%li\n", result);
         mpc_ast_delete(r.output);
