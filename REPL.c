@@ -297,7 +297,7 @@ int main(int argc, char** argv){
       lispish  : /^/ <expr>* /$/ ;             \
     ",
     Number, Symbol, Sexpr, Expr, Lispish);
-puts("heeheh");
+
   /*Prints the version and how to exit*/
   puts("Lispish Version 0.0.0.4.2");
   puts("Made in the USA, By Jake Adamson");
